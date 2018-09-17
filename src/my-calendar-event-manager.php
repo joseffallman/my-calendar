@@ -248,9 +248,11 @@ function mc_event_delete_post( $event_id, $post_id ) {
  *
  * @return array bulk action details.
  */
-function mc_bulk_action( $action ) {
+function mc_bulk_action( $action, $events = '' ) {
 	global $wpdb;
-	$events  = $_POST['mass_edit'];
+	if ( '' == $events && isset( $_POST['mass_edit'] ) ) {
+		$events  = $_POST['mass_edit'];
+	}
 	$i       = 0;
 	$total   = 0;
 	$ids     = array();
@@ -428,6 +430,11 @@ function mc_show_notice( $message, $echo = true ) {
 function my_calendar_manage() {
 	my_calendar_check();
 	global $wpdb;
+	require_once( dirname( __FILE__ )  . '/my-calendar-wp-list-table.php' );
+
+	$mc_event_list_table = new MC_event_list_table();
+	$mc_event_list_table->process_bulk_actions();
+	
 	if ( isset( $_GET['mode'] ) && 'delete' == $_GET['mode'] ) {
 		$event_id = ( isset( $_GET['event_id'] ) ) ? absint( $_GET['event_id'] ) : false;
 		$result   = $wpdb->get_results( $wpdb->prepare( 'SELECT event_title, event_author FROM ' . my_calendar_table() . ' WHERE event_id=%d', $event_id ), ARRAY_A ); // WPCS: unprepared SQL OK.
@@ -493,41 +500,7 @@ function my_calendar_manage() {
 		}
 	}
 
-	if ( ! empty( $_POST['mass_edit'] ) ) {
-		$nonce = $_REQUEST['_wpnonce'];
-		if ( ! wp_verify_nonce( $nonce, 'my-calendar-nonce' ) ) {
-			die( 'Security check failed' );
-		}
-		if ( isset( $_POST['mass_delete'] ) ) {
-			$results = mc_bulk_action( 'delete' );
-			echo $results;
-		}
 
-		if ( isset( $_POST['mass_trash'] ) ) {
-			$results = mc_bulk_action( 'trash' );
-			echo $results;
-		}
-
-		if ( isset( $_POST['mass_approve'] ) ) {
-			$results = mc_bulk_action( 'approve' );
-			echo $results;
-		}
-
-		if ( isset( $_POST['mass_archive'] ) ) {
-			$results = mc_bulk_action( 'archive' );
-			echo $results;
-		}
-
-		if ( isset( $_POST['mass_undo_archive'] ) ) {
-			$results = mc_bulk_action( 'unarchive' );
-			echo $results;
-		}
-
-		if ( isset( $_POST['mass_not_spam'] ) ) {
-			$results = mc_bulk_action( 'unspam' );
-			echo $results;
-		}
-	}
 	?>
 	<div class='wrap my-calendar-admin'>
 		<h1 id="mc-manage" class="wp-heading-inline"><?php _e( 'Manage Events', 'my-calendar' ); ?></h1>
@@ -541,7 +514,11 @@ function my_calendar_manage() {
 						<h2><?php _e( 'My Events', 'my-calendar' ); ?></h2>
 
 						<div class="inside">
-							<?php mc_list_events(); ?>
+							<?php 
+								//mc_list_events();
+								$mc_event_list_table->prepare_items();
+								$mc_event_list_table->display();
+							?>
 						</div>
 					</div>
 				</div>
@@ -555,6 +532,7 @@ function my_calendar_manage() {
 	</div>
 	<?php
 }
+
 
 /**
  * Generate inner wrapper for editing and managing events

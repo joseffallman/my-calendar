@@ -51,7 +51,12 @@
 	height: 1.2em;
 	display: inline-block;
 	border-radius: 3px;
-	border: 1px solid #000
+	border: 1px solid #000;
+}
+.my-calendar-admin .category-color {
+	margin-right: 5px;
+	position: relative;
+	top: 0.3em;
 }
 
 .active-link {
@@ -261,9 +266,11 @@ span.mc-notice {
 	display: inline-block
 }
 
+/*
 .my-calendar-admin .tablenav {
 	float: right
 }
+*/
 
 input[id=e_label], input[id=e_title], input[id=location_label], textarea[id=mc_twitter] {
 	font-size: 1.4em;
